@@ -6,11 +6,13 @@ import '../styles/global.css';
 <Layout title="Stack Visualizer">
 	<main class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 py-12 px-4">
 		<div class="max-w-4xl mx-auto">
-			<div class="text-center mb-12">
+			<div class="text-center mb-8">
 				<h1 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-4">
 					Stack Visualizer
 				</h1>
-				<p class="text-gray-600 text-lg">Visualize your stack operations in real-time</p>
+				<p class="text-gray-700 text-lg max-w-2xl mx-auto mb-2">
+					<b>What is a Stack?</b> A stack is a <span class="font-semibold text-indigo-600">Last-In, First-Out (LIFO)</span> data structure. The last element added is the first to be removed. You can <span class="font-semibold text-indigo-600">push</span> (add) or <span class="font-semibold text-pink-600">pop</span> (remove) elements from the <span class="font-semibold text-indigo-600">top</span> of the stack.
+				</p>
 			</div>
 			
 			<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
@@ -40,10 +42,16 @@ import '../styles/global.css';
 					<span class="text-gray-500">/10 elements</span>
 				</div>
 
+				<div class="mb-4 min-h-[32px]">
+					<div id="operationLog" class="text-center text-base text-gray-700 font-medium transition-all duration-300"></div>
+				</div>
+
 				<div id="stackContainer" class="bg-gradient-to-b from-white/50 to-white/30 rounded-xl p-6 flex flex-col-reverse items-center gap-3 relative border border-white/20 shadow-inner transition-all duration-300" style="min-height: 400px;">
 					<!-- Stack elements will be added here dynamically -->
 					<div class="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-indigo-200 to-purple-200"></div>
 				</div>
+				<!-- Hidden dummy for Tailwind JIT -->
+				<div class="hidden -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 text-xs font-bold rounded bg-indigo-500 text-white shadow ring-4 ring-indigo-300 scale-105"></div>
 			</div>
 
 			<div class="mt-8 text-center text-gray-500 text-sm">
@@ -61,10 +69,19 @@ import '../styles/global.css';
 	const pushBtn = document.getElementById('pushBtn');
 	const popBtn = document.getElementById('popBtn');
 	const stackCount = document.getElementById('stackCount');
+	const operationLog = document.getElementById('operationLog');
 	const BLOCK_HEIGHT = 56; // px
 	const BLOCK_WIDTH = 128; // px (w-32)
 	const GAP = 12; // px
 	const MIN_CONTAINER_HEIGHT = 400; // px
+
+	function showOperation(message, color = 'text-indigo-600') {
+		operationLog.className = `text-center text-base font-semibold transition-all duration-300 ${color}`;
+		operationLog.textContent = message;
+		setTimeout(() => {
+			operationLog.className = 'text-center text-base text-gray-700 font-medium transition-all duration-300';
+		}, 2000);
+	}
 
 	function updateStackCount() {
 		stackCount.textContent = stack.length;
@@ -79,7 +96,7 @@ import '../styles/global.css';
 		}
 	}
 
-	function updateStackVisualization() {
+	function updateStackVisualization(animation = null) {
 		stackContainer.innerHTML = '';
 		stackContainer.innerHTML = '<div class="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-indigo-200 to-purple-200"></div>';
 		
@@ -94,13 +111,34 @@ import '../styles/global.css';
 		stack.forEach((item, index) => {
 			const element = document.createElement('div');
 			const hue = 240 + (index * 10); // Creates a gradient effect from blue to purple
-			element.className = 'text-white rounded-xl flex items-center justify-center font-semibold transition-all duration-300 shadow-lg border-2 border-white/20 backdrop-blur-sm';
+			element.className = 'text-white rounded-xl flex items-center justify-center font-semibold transition-all duration-300 shadow-lg border-2 border-white/20 backdrop-blur-sm relative';
 			element.style.background = `linear-gradient(135deg, hsl(${hue}, 70%, 50%), hsl(${hue + 20}, 70%, 40%))`;
 			element.textContent = item;
 			element.style.width = BLOCK_WIDTH + 'px';
 			element.style.height = BLOCK_HEIGHT + 'px';
 			element.style.marginBottom = index === n - 1 ? '0px' : GAP + 'px';
 			element.style.zIndex = stack.length - index;
+
+			// Highlight the top of the stack (the last element visually due to flex-col-reverse)
+			if (index === n - 1) {
+				const topLabel = document.createElement('div');
+				topLabel.textContent = 'Top';
+				topLabel.className = 'absolute -top-6 left-1/2 -translate-x-1/2 px-2 py-0.5 text-xs font-bold rounded bg-indigo-500 text-white shadow';
+				element.appendChild(topLabel);
+				element.classList.add('ring-4', 'ring-indigo-300', 'scale-105');
+				if (animation === 'push') {
+					element.animate([
+						{ transform: 'scale(0.7)', opacity: 0 },
+						{ transform: 'scale(1.1)', opacity: 1 },
+						{ transform: 'scale(1)', opacity: 1 }
+					], { duration: 400, easing: 'ease-out' });
+				} else if (animation === 'pop') {
+					element.animate([
+						{ transform: 'scale(1.1)', opacity: 1 },
+						{ transform: 'scale(0.7)', opacity: 0 }
+					], { duration: 400, easing: 'ease-in' });
+				}
+			}
 			stackContainer.appendChild(element);
 		});
 		updateStackCount();
@@ -109,18 +147,22 @@ import '../styles/global.css';
 	pushBtn.addEventListener('click', () => {
 		const value = stackInput.value.trim();
 		if (value && stack.length < MAX_STACK_SIZE) {
-			stack.push(value);
+			stack.push(value); // Changed from unshift to push
 			stackInput.value = '';
-			updateStackVisualization();
+			updateStackVisualization('push');
+			showOperation(`Pushed "${value}" to the stack.`, 'text-green-600');
 		} else if (stack.length >= MAX_STACK_SIZE) {
-			alert('Stack is full! Maximum size is 10 elements.');
+			showOperation('Stack is full! Maximum size is 10 elements.', 'text-red-600');
 		}
 	});
 
 	popBtn.addEventListener('click', () => {
 		if (stack.length > 0) {
-			stack.pop();
-			updateStackVisualization();
+			const popped = stack.pop(); // Changed from shift to pop
+			updateStackVisualization('pop');
+			showOperation(`Popped "${popped}" from the stack.`, 'text-pink-600');
+		} else {
+			showOperation('Stack is empty! Nothing to pop.', 'text-red-600');
 		}
 	});
 
@@ -130,6 +172,8 @@ import '../styles/global.css';
 		}
 	});
 
+	// Initial explanation
+	showOperation('Try pushing a value to see how a stack works!', 'text-indigo-600');
 	// Initialize the stack count
 	updateStackCount();
 </script>
