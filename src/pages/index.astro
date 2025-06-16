@@ -40,7 +40,7 @@ import '../styles/global.css';
 					<span class="text-gray-500">/10 elements</span>
 				</div>
 
-				<div id="stackContainer" class="min-h-[400px] bg-gradient-to-b from-white/50 to-white/30 rounded-xl p-6 flex flex-col-reverse items-center gap-0 relative border border-white/20 shadow-inner">
+				<div id="stackContainer" class="bg-gradient-to-b from-white/50 to-white/30 rounded-xl p-6 flex flex-col-reverse items-center gap-3 relative border border-white/20 shadow-inner transition-all duration-300" style="min-height: 400px;">
 					<!-- Stack elements will be added here dynamically -->
 					<div class="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-indigo-200 to-purple-200"></div>
 				</div>
@@ -61,6 +61,10 @@ import '../styles/global.css';
 	const pushBtn = document.getElementById('pushBtn');
 	const popBtn = document.getElementById('popBtn');
 	const stackCount = document.getElementById('stackCount');
+	const BLOCK_HEIGHT = 56; // px
+	const BLOCK_WIDTH = 128; // px (w-32)
+	const GAP = 12; // px
+	const MIN_CONTAINER_HEIGHT = 400; // px
 
 	function updateStackCount() {
 		stackCount.textContent = stack.length;
@@ -79,13 +83,23 @@ import '../styles/global.css';
 		stackContainer.innerHTML = '';
 		stackContainer.innerHTML = '<div class="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-indigo-200 to-purple-200"></div>';
 		
+		// Calculate container height to fit all blocks and gaps
+		const n = stack.length;
+		let containerHeight = MIN_CONTAINER_HEIGHT;
+		if (n > 0) {
+			containerHeight = Math.max(MIN_CONTAINER_HEIGHT, n * BLOCK_HEIGHT + (n - 1) * GAP + 48); // +48 for padding
+		}
+		stackContainer.style.height = containerHeight + 'px';
+
 		stack.forEach((item, index) => {
 			const element = document.createElement('div');
 			const hue = 240 + (index * 10); // Creates a gradient effect from blue to purple
-			element.className = 'w-32 h-16 text-white rounded-xl flex items-center justify-center font-semibold transition-all duration-300 shadow-lg border-2 border-white/20 backdrop-blur-sm';
+			element.className = 'text-white rounded-xl flex items-center justify-center font-semibold transition-all duration-300 shadow-lg border-2 border-white/20 backdrop-blur-sm';
 			element.style.background = `linear-gradient(135deg, hsl(${hue}, 70%, 50%), hsl(${hue + 20}, 70%, 40%))`;
 			element.textContent = item;
-			element.style.transform = `translateY(${index * -8}px)`;
+			element.style.width = BLOCK_WIDTH + 'px';
+			element.style.height = BLOCK_HEIGHT + 'px';
+			element.style.marginBottom = index === n - 1 ? '0px' : GAP + 'px';
 			element.style.zIndex = stack.length - index;
 			stackContainer.appendChild(element);
 		});
