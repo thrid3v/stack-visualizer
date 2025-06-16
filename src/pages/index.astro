@@ -1,0 +1,80 @@
+---
+import Layout from '../layouts/Layout.astro';
+import '../styles/global.css';
+---
+
+<Layout title="Stack Visualizer">
+	<main class="min-h-screen bg-gray-100 py-8 px-4">
+		<div class="max-w-4xl mx-auto">
+			<h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Stack Visualizer</h1>
+			
+			<div class="bg-white rounded-lg shadow-lg p-6">
+				<div class="flex gap-4 mb-6">
+					<input
+						type="text"
+						id="stackInput"
+						placeholder="Enter a value"
+						class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+					/>
+					<button
+						id="pushBtn"
+						class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+					>
+						Push
+					</button>
+					<button
+						id="popBtn"
+						class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+					>
+						Pop
+					</button>
+				</div>
+
+				<div id="stackContainer" class="min-h-[300px] border-2 border-gray-200 rounded-lg p-4 flex flex-col-reverse items-center gap-2">
+					<!-- Stack elements will be added here dynamically -->
+				</div>
+			</div>
+		</div>
+	</main>
+</Layout>
+
+<script>
+	const stack = [];
+	const stackContainer = document.getElementById('stackContainer');
+	const stackInput = document.getElementById('stackInput');
+	const pushBtn = document.getElementById('pushBtn');
+	const popBtn = document.getElementById('popBtn');
+
+	function updateStackVisualization() {
+		stackContainer.innerHTML = '';
+		stack.forEach((item, index) => {
+			const element = document.createElement('div');
+			element.className = 'w-24 h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center font-semibold transition-all duration-300';
+			element.textContent = item;
+			element.style.transform = `translateY(${index * -10}px)`;
+			stackContainer.appendChild(element);
+		});
+	}
+
+	pushBtn.addEventListener('click', () => {
+		const value = stackInput.value.trim();
+		if (value) {
+			stack.push(value);
+			stackInput.value = '';
+			updateStackVisualization();
+		}
+	});
+
+	popBtn.addEventListener('click', () => {
+		if (stack.length > 0) {
+			stack.pop();
+			updateStackVisualization();
+		}
+	});
+
+	stackInput.addEventListener('keypress', (e) => {
+		if (e.key === 'Enter') {
+			pushBtn.click();
+		}
+	});
+</script>
