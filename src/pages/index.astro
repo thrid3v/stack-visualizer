@@ -4,35 +4,50 @@ import '../styles/global.css';
 ---
 
 <Layout title="Stack Visualizer">
-	<main class="min-h-screen bg-gray-100 py-8 px-4">
+	<main class="min-h-screen bg-gradient-to-br from-indigo-100 via-purple-50 to-pink-100 py-12 px-4">
 		<div class="max-w-4xl mx-auto">
-			<h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Stack Visualizer</h1>
+			<div class="text-center mb-12">
+				<h1 class="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-4">
+					Stack Visualizer
+				</h1>
+				<p class="text-gray-600 text-lg">Visualize your stack operations in real-time</p>
+			</div>
 			
-			<div class="bg-white rounded-lg shadow-lg p-6">
-				<div class="flex gap-4 mb-6">
+			<div class="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-white/20">
+				<div class="flex gap-4 mb-8">
 					<input
 						type="text"
 						id="stackInput"
 						placeholder="Enter a value"
-						class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+						class="flex-1 px-6 py-3 bg-white/50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 text-gray-700 placeholder-gray-400"
 					/>
 					<button
 						id="pushBtn"
-						class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+						class="px-8 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium"
 					>
 						Push
 					</button>
 					<button
 						id="popBtn"
-						class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+						class="px-8 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl hover:from-pink-600 hover:to-pink-700 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium"
 					>
 						Pop
 					</button>
 				</div>
 
-				<div id="stackContainer" class="min-h-[300px] border-2 border-gray-200 rounded-lg p-4 flex flex-col-reverse items-center gap-2">
-					<!-- Stack elements will be added here dynamically -->
+				<div class="text-center text-gray-600 mb-6">
+					<span id="stackCount" class="font-semibold text-indigo-600">0</span>
+					<span class="text-gray-500">/10 elements</span>
 				</div>
+
+				<div id="stackContainer" class="min-h-[400px] bg-gradient-to-b from-white/50 to-white/30 rounded-xl p-6 flex flex-col-reverse items-center gap-0 relative border border-white/20 shadow-inner">
+					<!-- Stack elements will be added here dynamically -->
+					<div class="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-indigo-200 to-purple-200"></div>
+				</div>
+			</div>
+
+			<div class="mt-8 text-center text-gray-500 text-sm">
+				<p>Built with Astro and Tailwind CSS</p>
 			</div>
 		</div>
 	</main>
@@ -40,28 +55,51 @@ import '../styles/global.css';
 
 <script>
 	const stack = [];
+	const MAX_STACK_SIZE = 10;
 	const stackContainer = document.getElementById('stackContainer');
 	const stackInput = document.getElementById('stackInput');
 	const pushBtn = document.getElementById('pushBtn');
 	const popBtn = document.getElementById('popBtn');
+	const stackCount = document.getElementById('stackCount');
+
+	function updateStackCount() {
+		stackCount.textContent = stack.length;
+		if (stack.length >= MAX_STACK_SIZE) {
+			stackInput.disabled = true;
+			pushBtn.disabled = true;
+			pushBtn.classList.add('opacity-50', 'cursor-not-allowed', 'hover:transform-none');
+		} else {
+			stackInput.disabled = false;
+			pushBtn.disabled = false;
+			pushBtn.classList.remove('opacity-50', 'cursor-not-allowed', 'hover:transform-none');
+		}
+	}
 
 	function updateStackVisualization() {
 		stackContainer.innerHTML = '';
+		stackContainer.innerHTML = '<div class="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-indigo-200 to-purple-200"></div>';
+		
 		stack.forEach((item, index) => {
 			const element = document.createElement('div');
-			element.className = 'w-24 h-12 bg-blue-500 text-white rounded-lg flex items-center justify-center font-semibold transition-all duration-300';
+			const hue = 240 + (index * 10); // Creates a gradient effect from blue to purple
+			element.className = 'w-32 h-16 text-white rounded-xl flex items-center justify-center font-semibold transition-all duration-300 shadow-lg border-2 border-white/20 backdrop-blur-sm';
+			element.style.background = `linear-gradient(135deg, hsl(${hue}, 70%, 50%), hsl(${hue + 20}, 70%, 40%))`;
 			element.textContent = item;
-			element.style.transform = `translateY(${index * -10}px)`;
+			element.style.transform = `translateY(${index * -8}px)`;
+			element.style.zIndex = stack.length - index;
 			stackContainer.appendChild(element);
 		});
+		updateStackCount();
 	}
 
 	pushBtn.addEventListener('click', () => {
 		const value = stackInput.value.trim();
-		if (value) {
+		if (value && stack.length < MAX_STACK_SIZE) {
 			stack.push(value);
 			stackInput.value = '';
 			updateStackVisualization();
+		} else if (stack.length >= MAX_STACK_SIZE) {
+			alert('Stack is full! Maximum size is 10 elements.');
 		}
 	});
 
@@ -77,4 +115,7 @@ import '../styles/global.css';
 			pushBtn.click();
 		}
 	});
+
+	// Initialize the stack count
+	updateStackCount();
 </script>
